@@ -1,0 +1,10 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>更新轻转</title><style>body{background:#fff8e7;color:#26213e;font:16px/1.8 system-ui;max-width:480px;margin:15vh auto;padding:24px}a{color:#5b32d6}</style><h1>正在更新轻转</h1><p id="status" role="status">正在获取最新界面，音乐和目录设置不会被删除。</p><a href="./">返回轻转</a><script type="module">
+const status=document.getElementById('status');
+try {
+ const registration=await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});
+ await registration.update();
+ const worker=registration.installing||registration.waiting;
+ if(worker&&worker.state!=='activated')await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('更新较慢，请稍后刷新此页重试。')),45000);worker.addEventListener('statechange',()=>{if(worker.state==='activated'){clearTimeout(timer);resolve()}else if(worker.state==='redundant'){clearTimeout(timer);reject(Error('更新失败，请检查网络后刷新此页。'))}})});
+ status.textContent='更新完成，正在返回轻转…';location.replace('./');
+}catch(error){status.textContent=error.message||'暂时无法更新，请检查网络后刷新此页。'}
+</script></html>

@@ -216,7 +216,20 @@ $('prepareOffline').addEventListener('click', async () => {
  } catch (e) { toast(e.message || '无法缓存离线组件'); }
  finally { await checkOffline(); }
 });
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').then(() => navigator.serviceWorker.ready).then(() => checkOffline()).catch(() => { $('offlineStatus').textContent = '离线模式未启用；请使用 HTTPS 或 localhost 打开。'; });
+if ('serviceWorker' in navigator) {
+ let reloading = false;
+ navigator.serviceWorker.addEventListener('controllerchange', () => {
+  if (reloading) return;
+  reloading = true;
+  if (running || tracks.length) toast('新版已就绪，完成当前任务后刷新即可更新。', 30000);
+  else location.reload();
+ });
+ navigator.serviceWorker.register('./sw.js', {updateViaCache: 'none'}).then(registration => {
+  registration.update().catch(() => {});
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) registration.update().catch(() => {}); });
+  return navigator.serviceWorker.ready;
+ }).then(() => checkOffline()).catch(() => { $('offlineStatus').textContent = '离线模式未启用；请使用 HTTPS 或 localhost 打开。'; });
+}
 else $('offlineStatus').textContent = '当前浏览器不支持离线安装，联网转换仍可使用。';
 window.addEventListener('online', checkOffline); window.addEventListener('offline', checkOffline);
 render(); await handlesReady;

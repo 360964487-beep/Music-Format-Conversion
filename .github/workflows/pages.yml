@@ -9,6 +9,10 @@ on:
       - 'scripts/pwa-dependencies.json'
       - 'tests/pwa.test.cjs'
       - '.github/workflows/pages.yml'
+  workflow_run:
+    workflows: ['pages build and deployment']
+    branches: [main]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
