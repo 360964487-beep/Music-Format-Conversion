@@ -1,0 +1,44 @@
+name: Build and release Windows app
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: qingzhuan-release
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get verified FFmpeg
+        shell: pwsh
+        run: ./scripts/get-ffmpeg.ps1
+      - name: Build and test
+        shell: pwsh
+        run: ./scripts/test.ps1
+      - name: Package portable app
+        shell: pwsh
+        run: ./scripts/package.ps1
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_COMMIT: ${{ github.sha }}
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          $tag = 'v'+$version
+          gh release view $tag --repo $env:GITHUB_REPOSITORY 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Output "Release $tag already exists. Increment VERSION for the next release."
+            exit 0
+          }
+          gh release create $tag "dist/QingZhuan-$version-windows-x64.zip" dist/SHA256SUMS.txt --repo $env:GITHUB_REPOSITORY --target $env:RELEASE_COMMIT --title "轻转 $tag" --notes-file RELEASE_NOTES.md
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }

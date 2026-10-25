@@ -1,0 +1,17 @@
+# Local preferences and music
+settings.json
+*.tmp
+*.ncm
+*.flac
+*.mp3
+*.lrc
+*.pcm
+# Build outputs and dependency cache
+*.exe
+bin/
+dist/
+.build-cache/
+tests-output/
+# Editor files
+.vs/
+*.user
