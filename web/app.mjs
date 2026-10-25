@@ -1,4 +1,5 @@
-import {MAX_BYTES, MAX_FILES, extension, stem, safeStem, displaySize, uniqueName, pairLyrics, collectDirectory, writeToDirectory} from './files.mjs';
+import {acquireWorkspace} from './instance.mjs';
+﻿import {MAX_BYTES, MAX_FILES, extension, stem, safeStem, displaySize, uniqueName, pairLyrics, collectDirectory, writeToDirectory} from './files.mjs';
 const $ = id => document.getElementById(id);
 const ENGINE_CACHE = 'qz-engine-0.12.10';
 const ENGINE_FILES = ['vendor/ffmpeg-core.js', 'vendor/ffmpeg-core.wasm', 'vendor/aes.js'];
@@ -6,12 +7,24 @@ const tracks = [];
 let preferences = {theme: 'acid', bitrate: '320'}, inputDirectory = null, outputDirectory = null;
 let running = false, runId = 0, activeTrack = null, lyricTarget = null, installPrompt = null, toastTimer;
 try { Object.assign(preferences, JSON.parse(localStorage.getItem('qz-preferences') || '{}')); } catch {}
-if (!['acid', 'neon', 'candy', 'studio'].includes(preferences.theme)) preferences.theme = 'acid';
+if (!['acid', 'neon', 'candy', 'studio', 'dopamine'].includes(preferences.theme)) preferences.theme = 'acid';
 if (!['128', '192', '256', '320'].includes(preferences.bitrate)) preferences.bitrate = '320';
 function savePreferences() { try { localStorage.setItem('qz-preferences', JSON.stringify(preferences)); } catch { toast('浏览器未允许保存偏好，下次启动可能需要重新设置'); } }
 function toast(message, duration = 6000) { $('toast').textContent = message; $('toast').hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').hidden = true, duration); }
-function applyTheme() { document.documentElement.dataset.theme = preferences.theme; $('themeSelect').value = preferences.theme; document.querySelector('meta[name="theme-color"]').content = {acid: '#D5FF3F', neon: '#0C0A18', candy: '#FFF1F6', studio: '#F5F6F8'}[preferences.theme]; }
-applyTheme(); $('bitrate').value = preferences.bitrate;
+function applyTheme() { document.documentElement.dataset.theme = preferences.theme; $('themeSelect').value = preferences.theme; document.querySelector('meta[name="theme-color"]').content = {acid: '#D5FF3F', neon: '#0C0A18', candy: '#FFF1F6', studio: '#F5F6F8', dopamine: '#FFF8E7'}[preferences.theme]; }
+applyTheme();
+const waiting = document.createElement('dialog');
+waiting.className = 'dialog instance-dialog';
+waiting.setAttribute('aria-labelledby', 'instanceTitle');
+waiting.innerHTML = '<span class="section-kicker">ONE WORKSPACE</span><h2 id="instanceTitle">轻转已经打开</h2><p>请返回已打开的轻转窗口继续使用。为避免重复转换，这个页面暂不启动。</p><p class="field-hint">关闭原窗口后，此页会自动接管。你也可以直接关闭此页。</p>';
+await acquireWorkspace(navigator.locks, () => {
+ document.body.append(waiting);
+ waiting.addEventListener('cancel', event => event.preventDefault());
+ waiting.showModal();
+});
+waiting.remove();
+if ('launchQueue' in window) window.launchQueue.setConsumer(() => { window.focus(); });
+$('bitrate').value = preferences.bitrate;
 $('themeSelect').addEventListener('change', e => { preferences.theme = e.target.value; applyTheme(); savePreferences(); });
 $('bitrate').addEventListener('change', e => { preferences.bitrate = e.target.value; savePreferences(); });
 const database = new Promise((resolve, reject) => {

@@ -54,8 +54,9 @@ async function main(){
  let checks=0;await assert.rejects(helpers.writeToDirectory(dir,'cancel.mp3',new Blob(['new']),null,()=>++checks<3));assert.ok(!files.has('cancel.mp3'));assert.ok(files.has('track.mp3'));
  console.log('PASS directory collision protection, audio/lyric sidecars, cancellation rollback');
  const ziplib=require(path.join(root,'vendor/fflate.js'));const archive=ziplib.zipSync({'中文.mp3':new Uint8Array([1,2]),'中文.lrc':new TextEncoder().encode('[00:00]歌词')},{level:0});const unzipped=ziplib.unzipSync(archive);assert.equal(Object.keys(unzipped).length,2);assert.equal(new TextDecoder().decode(unzipped['中文.lrc']),'[00:00]歌词');
+ await import('./instance.test.mjs');
  await serviceWorkerTest();
- const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.webmanifest'),'utf8').replace(/^\uFEFF/,''));assert.equal(manifest.display,'standalone');assert.equal(manifest.scope,'./');for(const icon of manifest.icons)assert.ok(fs.existsSync(path.resolve(root,icon.src)));
+ const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.webmanifest'),'utf8').replace(/^\uFEFF/,''));assert.equal(manifest.display,'standalone');assert.equal(manifest.id,'/Music-Format-Conversion/');assert.equal(manifest.launch_handler.client_mode,'focus-existing');assert.equal(manifest.scope,'./');for(const icon of manifest.icons)assert.ok(fs.existsSync(path.resolve(root,icon.src)));
  console.log('PASS PWA manifest, standalone installation assets, ZIP Unicode filenames');
 }
 async function serviceWorkerTest(){
