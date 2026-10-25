@@ -67,10 +67,12 @@ async function serviceWorkerTest(){
  const context={self:{location:{origin:'https://example.test'},registration:{scope},addEventListener:(n,fn)=>listeners[n]=fn,skipWaiting:async()=>{},clients:{claim:async()=>{}}},URL,Request,Response,caches:cacheApi,fetch:network};vm.runInNewContext(fs.readFileSync(path.join(root,'sw.js'),'utf8'),context);
  let pending;listeners.install({waitUntil:p=>pending=p});await pending;listeners.activate({waitUntil:p=>pending=p});await pending;
  async function request(file,mode='cors'){let result;listeners.fetch({request:{url:new URL(file,scope).href,method:'GET',mode},respondWith:p=>result=p});return result;}
+ const freshManifest=await request('manifest.webmanifest?v=1.0.6');assert.equal((await freshManifest.json()).launch_handler.client_mode,'focus-existing');
  const wasm=await request('vendor/ffmpeg-core.wasm');assert.equal(wasm.status,200);offline=true;
  assert.ok((await (await request('index.html','navigate')).text()).includes('轻转'));
  assert.equal((await (await request('vendor/ffmpeg-core.wasm')).arrayBuffer()).byteLength,fs.statSync(path.join(root,'vendor/ffmpeg-core.wasm')).size);
  assert.equal((await request('app.mjs')).status,200);
+ assert.equal((await (await request('manifest.webmanifest?v=1.0.6')).json()).id,'/Music-Format-Conversion/');
  console.log('PASS service-worker shell install, first-use engine caching, navigation and WASM retrieval with network unavailable');
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});
