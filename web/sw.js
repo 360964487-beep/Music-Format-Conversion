@@ -1,4 +1,4 @@
-const SHELL = 'qz-pwa-shell-1.0.2';
+const SHELL = 'qz-pwa-shell-1.0.3';
 const ENGINE = 'qz-engine-0.12.10';
 const ASSETS = ['./', './index.html', './styles.css', './app.mjs', './files.mjs', './ncm.js', './transcode.js', './converter.js', './manifest.webmanifest', './icons/icon-v2.svg', './icons/icon-v2-192.png', './icons/icon-v2-512.png', './icons/icon-v2-maskable-512.png', './vendor/aes.js', './vendor/fflate.js'];
 self.addEventListener('install', event => { event.waitUntil(caches.open(SHELL).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting())); });
