@@ -1,0 +1,17 @@
+QingZhuan PWA / 轻转浏览器版
+
+Application source: MIT. https://github.com/360964487-beep/Music-Format-Conversion
+
+@ffmpeg/core 0.12.10 (single-thread WebAssembly): GPL-2.0-or-later.
+License: vendor/ffmpeg-LICENSE.txt
+Package: https://www.npmjs.com/package/@ffmpeg/core/v/0.12.10
+Source and build recipes: https://github.com/ffmpegwasm/ffmpeg.wasm
+FFmpeg sources: https://github.com/FFmpeg/FFmpeg
+
+aes-js 3.1.2: MIT. License: vendor/aes-LICENSE.txt
+Source: https://github.com/ricmoo/aes-js
+
+fflate 0.8.2: MIT. License: vendor/fflate-LICENSE.txt
+Source: https://github.com/101arrowz/fflate
+
+All runtime assets are hosted together with this application. Music data is processed locally.

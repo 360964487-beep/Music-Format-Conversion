@@ -1,0 +1,14 @@
+{
+ "id":"./",
+ "name":"轻转 · 本地音乐转换",
+ "short_name":"轻转",
+ "description":"本地将 NCM、FLAC 转为 MP3，配套保存 LRC 歌词。",
+ "lang":"zh-CN",
+ "start_url":"./",
+ "scope":"./",
+ "display":"standalone",
+ "background_color":"#11140B",
+ "theme_color":"#D5FF3F",
+ "categories":["music","utilities","productivity"],
+ "icons":[{"src":"./icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"./icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]
+}

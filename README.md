@@ -1,5 +1,34 @@
 # 轻转 / QingZhuan
 
+## PWA 网页版
+
+[打开轻转 PWA](https://360964487-beep.github.io/Music-Format-Conversion/)
+
+直接在浏览器本地将 NCM、FLAC 转为 MP3，可安装到桌面或手机主屏幕。
+
+- 四套主题、批量队列、歌词自动匹配、单曲下载与 ZIP 打包。
+- 点击“准备离线转码”，完成约 31 MB 的组件缓存后，可断网使用。
+- 支持的桌面浏览器可记住授权的默认添加目录和保存目录；其他浏览器使用文件选择与下载保存。目录权限可能需要再次确认。
+- 单个文件最大 128 MB，每批最多 200 个文件；大文件建议使用 Windows 版。
+- 安装入口：页面右上角“安装应用”；iPhone / iPad 可在 Safari 分享菜单中“添加到主屏幕”。未在 iOS 真机验证。
+- 队列和转换结果仅在本次页面中保留，刷新前请先下载或保存。
+
+![PWA 桌面预览](docs/pwa-desktop.png)
+
+[手机布局预览](docs/pwa-mobile.png) · [PWA 验证记录](docs/PWA-验证结果.md)
+
+PWA 源码位于 `web/`。依赖在构建时下载并校验，不从运行中的第三方 CDN 加载：
+
+```sh
+node scripts/prepare-pwa.mjs
+node tests/pwa.test.cjs
+# 用任意静态服务器提供 web/，例如：
+python -m http.server 8080 --directory web
+```
+
+GitHub Actions 会在 PWA 代码更新时测试并发布到 GitHub Pages；需要 Pages 的 Source 为 GitHub Actions。
+
+
 Windows 本地音乐转换工具：将 NCM、FLAC 处理为 MP3，并自动匹配 LRC 歌词。
 
 [下载 Windows 离线版](https://github.com/360964487-beep/Music-Format-Conversion/releases/latest) · [查看发布记录](https://github.com/360964487-beep/Music-Format-Conversion/releases)
@@ -72,7 +101,7 @@ GitHub Actions 会在推送 `main` 时执行构建、合成样本测试和打包
 
 测试使用生成的音频和 NCM 封装，尚未验证所有网易云真实下载文件及客户端版本；不支持或损坏的文件会显示错误。大量文件夹的导入阶段可能短暂等待。
 
-本项目为 Windows 桌面应用；GitHub Pages 无法直接运行 EXE。
+本仓库同时包含 Windows 桌面版与独立的 PWA 网页版。
 
 ## 许可证
 

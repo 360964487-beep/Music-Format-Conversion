@@ -15,3 +15,6 @@ tests-output/
 # Editor files
 .vs/
 *.user
+
+# Generated browser runtime
+web/vendor/

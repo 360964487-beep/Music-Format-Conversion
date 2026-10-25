@@ -1,0 +1,37 @@
+[
+  {
+    "file": "ffmpeg-core.js",
+    "url": "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.js",
+    "sha256": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21"
+  },
+  {
+    "file": "ffmpeg-core.wasm",
+    "url": "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.wasm",
+    "sha256": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
+  },
+  {
+    "file": "aes.js",
+    "url": "https://cdn.jsdelivr.net/npm/aes-js@3.1.2/index.js",
+    "sha256": "579277f6e64049ff523b1fd6d6ce1bc9bd2b16b6253dac9862a02665e9bf103d"
+  },
+  {
+    "file": "fflate.js",
+    "url": "https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js",
+    "sha256": "c3b34f2e9f5e74d4d7d64e01cac7a0c01954c6c406414d42185c7b53d6875ddf"
+  },
+  {
+    "file": "aes-LICENSE.txt",
+    "url": "https://cdn.jsdelivr.net/npm/aes-js@3.1.2/LICENSE.txt",
+    "sha256": "f355888c279a510c9c36210feea122aee628c79a989d89ca7e86ec4b54f699aa"
+  },
+  {
+    "file": "fflate-LICENSE.txt",
+    "url": "https://cdn.jsdelivr.net/npm/fflate@0.8.2/LICENSE",
+    "sha256": "805f6cb28bb8b6d3a0badd83c93bccd9671fa01a3b4b92b7042b0743325ac243"
+  },
+  {
+    "file": "ffmpeg-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/FFmpeg/FFmpeg/master/COPYING.GPLv2",
+    "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643"
+  }
+]
