@@ -8,8 +8,8 @@ $dist = Join-Path $root 'dist'
 $stage = Join-Path $dist ('QingZhuan-'+$version+'-'+[guid]::NewGuid().ToString('N'))
 $payload = Join-Path $stage '轻转'
 New-Item -ItemType Directory -Force -Path $payload | Out-Null
-foreach ($item in @('轻转.exe','src','bin','使用说明.txt','README.md','LICENSE','THIRD_PARTY_NOTICES.md','VERSION')) {
- Copy-Item -LiteralPath (Join-Path $root $item) -Destination $payload -Recurse -Force
+foreach ($item in @('轻转.exe','创建桌面快捷方式.cmd','src','bin','使用说明.txt','README.md','LICENSE','THIRD_PARTY_NOTICES.md','VERSION')) {
+ Copy-Item -LiteralPath (Join-Path $root $item) -Destination $payload -Recurse -Force -Exclude 'yt-dlp.exe','*.download'
 }
 if (-not (Test-Path (Join-Path $root 'web/vendor/ffmpeg-core.wasm'))) {
  & node (Join-Path $PSScriptRoot 'prepare-pwa.mjs')

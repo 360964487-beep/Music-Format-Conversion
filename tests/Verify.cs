@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -29,13 +29,13 @@ public class Verify {
   int[] box=Enumerable.Range(0,256).ToArray();int j=0;for(int i=0;i<256;i++){j=(j+box[i]+key[i%key.Length])%256;int v=box[i];box[i]=box[j];box[j]=v;}var data=File.ReadAllBytes(audio);for(int i=0;i<data.Length;i++){int a=(i+1)%256;data[i]^=(byte)box[(box[a]+box[(box[a]+a)%256])%256];}
   using(var w=new BinaryWriter(File.Create(file))){w.Write(Encoding.ASCII.GetBytes("CTENFDAM"));w.Write((short)0);w.Write(raw.Length);w.Write(raw);w.Write(meta.Length);w.Write(meta);w.Write(new byte[5]);w.Write(cover.Length+19);w.Write(cover.Length);w.Write(cover);w.Write(new byte[19]);w.Write(data);}
  }
- static string ConvertFile(string name){var song=new Song{Path=P(name)};if(File.Exists(Path.ChangeExtension(song.Path,".lrc")))song.Lyric=Path.ChangeExtension(song.Path,".lrc");return Engine.ConvertSong(song,P("输出"),320,CancellationToken.None,p=>{});}
+ static string ConvertFile(string name){var song=new Song{Path=P(name)};return Engine.ConvertSong(song,P("输出"),320,CancellationToken.None,p=>{});}
  static string Capture(string exe,string args){using(var process=Process.Start(new ProcessStartInfo(exe,args){UseShellExecute=false,CreateNoWindow=true,RedirectStandardError=true,RedirectStandardOutput=true,StandardOutputEncoding=Encoding.UTF8,StandardErrorEncoding=Encoding.UTF8})){var err=process.StandardError.ReadToEndAsync();var output=process.StandardOutput.ReadToEndAsync();if(!process.WaitForExit(30000)){process.Kill();throw new Exception("测试进程超时");}Assert(process.ExitCode==0,err.Result);return output.Result;}}
  static void ConvertTests(){
   FF("-f lavfi -i sine=frequency=440:duration=2 -metadata title=FLAC测试标题 "+Quote(P("输入 音频.flac")));
   FF("-i "+Quote(P("输入 音频.flac"))+" -c:a libmp3lame -b:a 128k "+Quote(P("原始.mp3")));
   File.WriteAllText(P("输入 音频.lrc"),"[00:00.00]测试歌词",Encoding.UTF8);
-  var output=ConvertFile("输入 音频.flac");Assert(File.ReadAllBytes(Path.ChangeExtension(output,".lrc")).SequenceEqual(File.ReadAllBytes(P("输入 音频.lrc"))),"歌词不一致");Assert(new FileInfo(output).Length>1000,"MP3结果为空");Pass("FLAC转MP3、中文空格路径、歌词配套保存");
+  var output=ConvertFile("输入 音频.flac");Assert(!File.Exists(Path.ChangeExtension(output,".lrc"))&&File.Exists(P("输入 音频.lrc")),"转换不应复制或删除源歌词");Assert(new FileInfo(output).Length>1000,"MP3结果为空");Pass("FLAC转MP3、中文空格路径、不复制同名 LRC");
   string second=ConvertFile("输入 音频.flac");Assert(second!=output&&File.Exists(output),"重名覆盖");Pass("重名自动编号、保留源文件");
   NcmFixture(P("原始.mp3"),P("MP3封装.ncm"),true);NcmFixture(P("输入 音频.flac"),P("FLAC封装.ncm"),true);NcmFixture(P("原始.mp3"),P("无元数据.ncm"),false);
   string ncm=ConvertFile("MP3封装.ncm");ConvertFile("FLAC封装.ncm");ConvertFile("无元数据.ncm");Pass("NCM内含MP3/FLAC、无元数据、封面帧填充");
@@ -48,17 +48,65 @@ public class Verify {
   string path=P("preferences.json");var p=new Preferences{InputDirectory=scratch,OutputDirectory=P("输出 音乐"),Theme=2,Quality=3};PreferenceStore.Save(p,path);p.Theme=3;PreferenceStore.Save(p,path);var loaded=PreferenceStore.Load(path);Assert(loaded.InputDirectory==scratch&&loaded.OutputDirectory==p.OutputDirectory&&loaded.Theme==3&&loaded.Quality==3,"偏好恢复错误");Assert(!Directory.GetFiles(scratch,"*.tmp").Any(),"设置临时文件残留");
   string probe=Capture(System.Reflection.Assembly.GetExecutingAssembly().Location,"--prefs-probe "+Quote(path));Assert(probe.Contains("3|3|"+scratch+"|"+p.OutputDirectory),"跨进程偏好恢复错误");Pass("默认添加/保存目录、主题、音质跨进程恢复与原子更新");
   File.WriteAllText(path,"broken-json");Assert(PreferenceStore.Load(path).Theme==0&&PreferenceStore.Warning!=null,"损坏设置未回退");Assert(PreferenceStore.DirectoryValue("",false)=="","默认目录未支持空白");bool invalid=false;try{PreferenceStore.DirectoryValue("relative/path",false);}catch(ArgumentException){invalid=true;}Assert(invalid,"接受相对目录");Pass("空目录默认值、非法路径拒绝、损坏设置回退");
-  string isolated=P("instance");Directory.CreateDirectory(Path.Combine(isolated,"src"));File.Copy(Path.Combine(root,"轻转.exe"),Path.Combine(isolated,"轻转.exe"));foreach(string f in Directory.GetFiles(Path.Combine(root,"src"),"*.xaml"))File.Copy(f,Path.Combine(isolated,"src",Path.GetFileName(f)));PreferenceStore.Save(p,Path.Combine(isolated,"settings.json"));string smoke=P("ui-smoke.txt");Capture(Path.Combine(isolated,"轻转.exe"),"--ui-smoke "+Quote(smoke));string text=File.ReadAllText(smoke);Assert(text.Contains(p.OutputDirectory)&&text.Contains("\n3\n")&&text.Contains(scratch),"真实窗口未恢复偏好");Pass("真实窗口启动、恢复默认目录与主题、正常退出");
+  string isolated=P("instance");
+  Directory.CreateDirectory(Path.Combine(isolated,"src"));
+  string exe=Path.Combine(isolated,"轻转.exe");
+  File.Copy(Path.Combine(root,"轻转.exe"),exe);
+  foreach(string f in Directory.GetFiles(Path.Combine(root,"src"),"*.xaml"))File.Copy(f,Path.Combine(isolated,"src",Path.GetFileName(f)));
+  PreferenceStore.Save(p,Path.Combine(isolated,"settings.json"));
+  string smoke=P("ui-smoke.txt"),userSettings=P(Path.Combine("profile","QingZhuan","settings.json"));
+  string smokeArgs="--ui-smoke "+Quote(smoke)+" "+Quote(userSettings);
+  Capture(exe,smokeArgs);
+  string text=File.ReadAllText(smoke);
+  Assert(text.Contains(p.OutputDirectory)&&text.Contains("\n3\n")&&text.Contains(scratch),"旧版目录未恢复");
+  p.OutputDirectory=P("新的保存目录");p.Theme=Looks.Names.Length-1;
+  PreferenceStore.Save(p,userSettings);
+  Capture(exe,smokeArgs);
+  Assert(File.ReadAllText(smoke).Contains(p.OutputDirectory+"\n"+p.Theme+"\n"),"重新启动未读取用户设置中的保存目录");
+  Pass("恢复旧版目录、创建用户设置目录并在重启后恢复新目录");
+  using(var icon=System.Drawing.Icon.ExtractAssociatedIcon(exe))
+  using(var bitmap=icon.ToBitmap()){
+   bool teal=false;
+   for(int y=0;y<bitmap.Height;y++)for(int x=0;x<bitmap.Width;x++){
+    var color=bitmap.GetPixel(x,y);
+    if(color.A>128&&color.G>100&&color.G>color.R+40&&color.B>color.R+30)teal=true;
+   }
+   Assert(teal,"Windows 程序未嵌入青绿色图标");
+  }
+  string shortcut=DesktopShortcut.Create(isolated,exe);
+  Assert(File.Exists(shortcut)&&new FileInfo(shortcut).Length>0,"未生成桌面快捷方式");
+  Pass("Windows 程序内嵌图标及快捷方式创建");
+ }
+ static void SingleInstanceTest(){
+  string name="QingZhuan.Verify."+Guid.NewGuid().ToString("N");
+  string exe=System.Reflection.Assembly.GetExecutingAssembly().Location;
+  using(var first=SingleInstance.Start(name)){
+   Assert(first!=null,"首个进程没有取得单实例锁");
+   Assert(Capture(exe,"--instance-probe "+name).Trim()=="existing","第二个进程创建了另一个实例");
+   var dispatcher=System.Windows.Threading.Dispatcher.CurrentDispatcher;
+   var frame=new System.Windows.Threading.DispatcherFrame();
+   bool activated=false;
+   first.Listen(dispatcher,()=>{activated=true;frame.Continue=false;});
+   var timeout=new System.Windows.Threading.DispatcherTimer{Interval=TimeSpan.FromSeconds(3)};
+   timeout.Tick+=(sender,args)=>{timeout.Stop();frame.Continue=false;};
+   timeout.Start();
+   System.Windows.Threading.Dispatcher.PushFrame(frame);
+   timeout.Stop();
+   Assert(activated,"主窗口没有收到重复启动通知");
+  }
+  Assert(Capture(exe,"--instance-probe "+name).Trim()=="first","关闭后不能重新启动");
+  Pass("跨进程单实例、启动期间唤醒通知、退出后可重新启动");
  }
  static FrameworkElement Detach(Window w){var f=(FrameworkElement)w.Content;w.Content=null;f.Resources=w.Resources;System.Windows.Documents.TextElement.SetFontFamily(f,w.FontFamily);System.Windows.Documents.TextElement.SetFontSize(f,w.FontSize);System.Windows.Documents.TextElement.SetForeground(f,w.Foreground);return f;}
- static void Render(Window w,string file,int width,int height){var c=Detach(w);c.Margin=new Thickness(28,22,28,22);c.Width=width-56;c.Height=height-44;((Grid)c).Background=w.Background;c.Measure(new Size(width,height));c.Arrange(new Rect(0,0,width,height));c.UpdateLayout();var q=w.FindName("Queue")as DataGrid;if(q!=null){q.Columns[0].Width=new DataGridLength(Math.Max(140,q.ActualWidth-482));c.UpdateLayout();}
-  foreach(string name in new[]{"Start","Quality","Destination","Queue","ThemeChoice","Settings"}){var e=w.FindName(name)as FrameworkElement;if(e==null)continue;var pos=e.TranslatePoint(new Point(0,0),c);Assert(pos.X>=-1&&pos.Y>=-1&&pos.X+e.ActualWidth<=c.ActualWidth+1&&pos.Y+e.ActualHeight<=c.ActualHeight+1,"控件越界："+name);}
+ static void Render(Window w,string file,int width,int height){var c=Detach(w);c.Margin=new Thickness(28,22,28,22);c.Width=width-56;c.Height=height-44;((Grid)c).Background=w.Background;c.Measure(new Size(width,height));c.Arrange(new Rect(0,0,width,height));c.UpdateLayout();var queue=w.FindName("Queue")as DataGrid;if(queue!=null){Looks.FitQueue(queue);c.UpdateLayout();}
+  foreach(string name in new[]{"Start","Quality","Destination","Queue","ThemeChoice","Add","Remove","Browse","DownloadVideo"}){var e=w.FindName(name)as FrameworkElement;if(e==null)continue;var pos=e.TranslatePoint(new Point(0,0),c);Assert(pos.X>=-1&&pos.Y>=-1&&pos.X+e.ActualWidth<=c.ActualWidth+1&&pos.Y+e.ActualHeight<=c.ActualHeight+1,"控件越界："+name);}
   var v=new DrawingVisual();using(var dc=v.RenderOpen()){dc.DrawRectangle(w.Background,null,new Rect(0,0,width,height));dc.DrawRectangle(new VisualBrush(c),null,new Rect(28,22,width-56,height-44));}var b=new RenderTargetBitmap(width,height,96,96,PixelFormats.Pbgra32);b.Render(v);var png=new PngBitmapEncoder();png.Frames.Add(BitmapFrame.Create(b));using(var f=File.Create(file))png.Save(f);
  }
- static void VisualTests(){string docs=Path.Combine(root,"docs");Directory.CreateDirectory(docs);for(int i=0;i<4;i++){Window w;using(var file=File.OpenRead(Path.Combine(root,"src","Main.xaml")))w=(Window)XamlReader.Load(file);Looks.Attach(w,i);((ComboBox)w.FindName("ThemeChoice")).SelectedIndex=i;((TextBlock)w.FindName("ImportHint")).Text=@"默认添加目录：D:\音乐\网易云下载";((TextBox)w.FindName("Destination")).Text=@"D:\音乐\MP3";var q=(DataGrid)w.FindName("Queue");q.ItemsSource=new[]{new Song{Path=P("输入 音频.flac"),Lyric="test.lrc"},new Song{Path=P("MP3封装.ncm")},new Song{Path=P("FLAC封装.ncm")}};((TextBlock)w.FindName("Count")).Text="转换队列 · 3 首歌曲";((Button)w.FindName("Start")).IsEnabled=true;Render(w,Path.Combine(docs,"theme-"+i+".png"),1100,760);}
-  Window dialog;using(var f=File.OpenRead(Path.Combine(root,"src","Settings.xaml")))dialog=(Window)XamlReader.Load(f);Looks.Attach(dialog,1);((TextBox)dialog.FindName("DefaultInput")).Text=@"D:\音乐\网易云下载";((TextBox)dialog.FindName("DefaultOutput")).Text=@"D:\音乐\MP3";Render(dialog,Path.Combine(docs,"settings.png"),660,440);Pass("四套主题与目录设置界面渲染、控件边界检查");
+ static void VisualTests(){string docs=Path.Combine(root,"docs");Directory.CreateDirectory(docs);for(int i=0;i<Looks.Names.Length;i++){Window w;using(var file=File.OpenRead(Path.Combine(root,"src","Main.xaml")))w=(Window)XamlReader.Load(file);Looks.Attach(w,i);((ComboBox)w.FindName("ThemeChoice")).ItemsSource=Looks.Names;((ComboBox)w.FindName("ThemeChoice")).SelectedIndex=i;((TextBox)w.FindName("Destination")).Text=@"D:\音乐\MP3";var q=(DataGrid)w.FindName("Queue");q.ItemsSource=new[]{new Song{Path=P("输入 音频.flac")},new Song{Path=P("MP3封装.ncm")},new Song{Path=P("FLAC封装.ncm")}};((TextBlock)w.FindName("Count")).Text="转换队列 · 3 首";((TextBlock)w.FindName("EmptyQueue")).Visibility=Visibility.Collapsed;((Button)w.FindName("Start")).IsEnabled=true;Render(w,Path.Combine(docs,"theme-"+i+".png"),840,540);}
+  using(var f=File.OpenRead(Path.Combine(root,"src","Video.xaml"))){var dialog=(Window)XamlReader.Load(f);Assert(dialog.FindName("VideoLink") is TextBox && dialog.FindName("VideoDestination")==null,"视频窗口目录入口未统一");}
+  Pass("七套主题、最小窗口控件边界与视频窗口布局检查");
  }
- [STAThread]public static int Main(string[] args){Console.OutputEncoding=new UTF8Encoding(false);try{if(args.Length>1&&args[0]=="--prefs-probe"){var p=PreferenceStore.Load(args[1]);Console.WriteLine(p.Theme+"|"+p.Quality+"|"+p.InputDirectory+"|"+p.OutputDirectory);return 0;}root=Path.GetFullPath(args[0]);Engine.Base=root;scratch=Path.Combine(root,"tests-output","run-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(scratch);ConvertTests();PreferenceTests();VisualTests();File.WriteAllText(Path.Combine(root,"docs","验证结果.txt"),"测试使用合成音频和合成NCM封装；尚未验证所有真实网易云客户端版本。\n\n"+string.Join("\n",passed.Select(p=>"通过："+p)),Encoding.UTF8);return 0;}catch(Exception e){Console.Error.WriteLine(e);return 1;}}
+ [STAThread]public static int Main(string[] args){Console.OutputEncoding=new UTF8Encoding(false);try{if(args.Length>1&&args[0]=="--instance-probe"){using(var app=SingleInstance.Start(args[1]))Console.WriteLine(app==null?"existing":"first");return 0;}if(args.Length>1&&args[0]=="--prefs-probe"){var p=PreferenceStore.Load(args[1]);Console.WriteLine(p.Theme+"|"+p.Quality+"|"+p.InputDirectory+"|"+p.OutputDirectory);return 0;}root=Path.GetFullPath(args[0]);Engine.Base=root;scratch=Path.Combine(root,"tests-output","run-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(scratch);ConvertTests();PreferenceTests();SingleInstanceTest();VisualTests();File.WriteAllText(Path.Combine(root,"docs","验证结果.txt"),"测试使用合成音频和合成NCM封装；尚未验证所有真实网易云客户端版本。\n\n"+string.Join("\n",passed.Select(p=>"通过："+p)),Encoding.UTF8);return 0;}catch(Exception e){Console.Error.WriteLine(e);return 1;}}
 }
 
 
