@@ -1,4 +1,4 @@
-using System;using System.IO;using System.Linq;using System.Text;using System.Collections.Generic;using System.Collections.ObjectModel;using System.ComponentModel;using System.Diagnostics;using System.Security.Cryptography;using System.Threading;using System.Threading.Tasks;using System.Windows;using System.Windows.Controls;using System.Windows.Markup;using System.Web.Script.Serialization;using Forms=System.Windows.Forms;
+﻿using System;using System.IO;using System.Linq;using System.Text;using System.Collections.Generic;using System.Collections.ObjectModel;using System.ComponentModel;using System.Diagnostics;using System.Security.Cryptography;using System.Threading;using System.Threading.Tasks;using System.Windows;using System.Windows.Controls;using System.Windows.Markup;using System.Web.Script.Serialization;using Forms=System.Windows.Forms;
 public class Song:INotifyPropertyChanged{
  public string Path{get;set;}public string Lyric{get;set;}public string Output{get;set;}
  public string Name{get{return System.IO.Path.GetFileNameWithoutExtension(Path);}}public string Format{get{return System.IO.Path.GetExtension(Path).TrimStart('.').ToUpperInvariant();}}public string Size{get{return (new FileInfo(Path).Length/1048576.0).ToString("0.0")+" MB";}}public string LyricState{get{return Lyric==null?(Format=="LRC"?"未匹配音频":"无歌词"):"已匹配歌词";}}
@@ -73,6 +73,7 @@ public class App {
   Get<ComboBox>("ThemeChoice").SelectedIndex=preferences.Theme;Get<ComboBox>("Quality").SelectedIndex=preferences.Quality;Get<TextBox>("Destination").Text=preferences.OutputDirectory;RefreshHint();
   if(PreferenceStore.Warning!=null)Get<TextBlock>("Summary").Text=PreferenceStore.Warning;
   Get<DataGrid>("Queue").ItemsSource=songs;Get<DataGrid>("Queue").SizeChanged+=(s,e)=>{var q=Get<DataGrid>("Queue");q.Columns[0].Width=new DataGridLength(Math.Max(140,q.ActualWidth-482));};
+  Get<Button>("DownloadVideo").Click+=(s,e)=>VideoWindow.Show(w,Get<TextBox>("Destination").Text,Folder);
   Get<Button>("Settings").Click+=(s,e)=>Settings();
   Get<ComboBox>("ThemeChoice").SelectionChanged+=(s,e)=>{if(loading)return;preferences.Theme=Get<ComboBox>("ThemeChoice").SelectedIndex;Looks.Apply(w,preferences.Theme);SavePreferences(true);};
   Get<ComboBox>("Quality").SelectionChanged+=(s,e)=>{if(loading)return;preferences.Quality=Get<ComboBox>("Quality").SelectedIndex;SavePreferences(true);};

@@ -31,13 +31,15 @@ GitHub Actions 会在 PWA 代码更新时测试并发布到 GitHub Pages；需�
 
 Windows 本地音乐转换工具：将 NCM、FLAC 处理为 MP3，并自动匹配 LRC 歌词。
 
+从「视频下载」粘贴 B 站或抖音单个视频的分享链接，即可保存 MP4。首次使用需联网获取下载组件，抖音验证时可选择本地 Cookie 文件。
+
 [下载 Windows 离线版](https://github.com/360964487-beep/Music-Format-Conversion/releases/latest) · [查看发布记录](https://github.com/360964487-beep/Music-Format-Conversion/releases)
 
 ![酸性青柠主题](docs/theme-2.png)
 
 ## 使用
 
-1. 在 Releases 下载 `QingZhuan-0.2.0-windows-x64.zip`，完整解压。
+1. 在 Releases 下载 `QingZhuan-0.3.0-windows-x64.zip`，完整解压。
 2. 双击 **轻转.exe**，添加音乐文件或拖入文件夹。
 3. 选择音质和保存目录，点击“开始转换”。原文件始终保留。
 

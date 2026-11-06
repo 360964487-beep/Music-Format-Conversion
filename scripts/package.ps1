@@ -1,9 +1,9 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $version = (Get-Content (Join-Path $root 'VERSION') -Raw).Trim()
 if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'VERSION 格式无效' }
 & (Join-Path $root 'src/build.ps1')
-if (-not (Test-Path (Join-Path $root 'bin/ffmpeg.exe'))) { & (Join-Path $PSScriptRoot 'get-ffmpeg.ps1') }
+if ((-not (Test-Path (Join-Path $root 'bin/ffmpeg.exe'))) -or (-not (Test-Path (Join-Path $root 'bin/ffprobe.exe')))) { & (Join-Path $PSScriptRoot 'get-ffmpeg.ps1') }
 $dist = Join-Path $root 'dist'
 $stage = Join-Path $dist ('QingZhuan-'+$version+'-'+[guid]::NewGuid().ToString('N'))
 $payload = Join-Path $stage '轻转'

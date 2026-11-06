@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $dependency = Get-Content (Join-Path $PSScriptRoot 'dependencies.json') -Raw | ConvertFrom-Json
 $cache = Join-Path $root '.build-cache'
@@ -16,3 +16,5 @@ New-Item -ItemType Directory -Force -Path (Join-Path $root 'bin') | Out-Null
 Copy-Item -LiteralPath $binary[0].FullName -Destination (Join-Path $root 'bin/ffmpeg.exe') -Force
 Copy-Item -LiteralPath (Join-Path $folder 'LICENSE') -Destination (Join-Path $root 'bin/FFmpeg-LICENSE.txt') -Force
 Copy-Item -LiteralPath (Join-Path $folder 'README.txt') -Destination (Join-Path $root 'bin/FFmpeg-BUILD.txt') -Force
+
+Copy-Item -LiteralPath (Join-Path (Split-Path $binary[0].FullName -Parent) 'ffprobe.exe') -Destination (Join-Path $root 'bin/ffprobe.exe') -Force
