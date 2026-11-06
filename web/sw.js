@@ -1,4 +1,4 @@
-const SHELL = 'qz-pwa-shell-1.0.7';
+const SHELL = 'qz-pwa-shell-1.0.8';
 const ENGINE = 'qz-engine-0.12.10';
 const ASSETS = ['./', './index.html', './styles.css', './app.mjs', './video.mjs', './instance.mjs', './files.mjs', './ncm.js', './transcode.js', './converter.js', './manifest.webmanifest', './icons/icon-v2.svg', './icons/icon-v2-192.png', './icons/icon-v2-512.png', './icons/icon-v2-maskable-512.png', './vendor/aes.js', './vendor/fflate.js'];
 self.addEventListener('install', event => { event.waitUntil(caches.open(SHELL).then(cache => cache.addAll(ASSETS.map(path => new Request(new URL(path, self.registration.scope), {cache: 'reload'})))).then(() => self.skipWaiting())); });
@@ -6,7 +6,7 @@ self.addEventListener('activate', event => { event.waitUntil(caches.keys().then(
 self.addEventListener('fetch', event => {
  const request = event.request, url = new URL(request.url);
  if (request.method !== 'GET' || url.origin !== self.location.origin || !url.pathname.startsWith(new URL(self.registration.scope).pathname)) return;
- if (url.origin === 'http://127.0.0.1:18746' && url.pathname.startsWith('/jobs/')) return;
+ if (url.pathname.startsWith('/jobs/')) return;
  if (url.pathname.endsWith('.webmanifest')) {
   event.respondWith(fetch(new Request(request.url, {cache: 'no-store'})).then(response => {
    if (!response.ok) throw new Error('Manifest unavailable');

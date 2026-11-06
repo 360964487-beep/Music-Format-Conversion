@@ -1,0 +1,9 @@
+*
+!Dockerfile
+!scripts/
+!scripts/prepare-pwa.mjs
+!scripts/pwa-dependencies.json
+!scripts/video_service.py
+!web/
+!web/**
+web/vendor/
